@@ -249,24 +249,24 @@ function App() {
     const templatesBySection = {
       projects: {
         id: createId("project"),
-        title: "New Project",
-        role: "Your Role",
-        period: "2026",
-        bullets: [createBullet("Describe the problem, your solution, and the outcome.")],
+        title: "",
+        role: "",
+        period: "",
+        bullets: [createBullet("")],
       },
       experience: {
         id: createId("experience"),
-        company: "Company Name",
-        role: "Position",
-        period: "2026",
-        bullets: [createBullet("Describe your responsibility and impact.")],
+        company: "",
+        role: "",
+        period: "",
+        bullets: [createBullet("")],
       },
       education: {
         id: createId("education"),
-        school: "School Name",
-        degree: "Degree / Major",
-        period: "2023 - 2027",
-        detail: "Relevant coursework, GPA, honors, or academic focus.",
+        school: "",
+        degree: "",
+        period: "",
+        detail: "",
       },
     };
     setResume((current) => ({ ...current, [section]: [...current[section], templatesBySection[section]] }));
