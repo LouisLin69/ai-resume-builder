@@ -82,6 +82,7 @@ a:focus-visible {
 
 .save-pill,
 .primary-button,
+.secondary-button,
 .icon-button,
 .small-button,
 .github-link {
@@ -116,11 +117,56 @@ a:focus-visible {
   font-weight: 800;
 }
 
+.secondary-button {
+  border: 1px solid var(--line);
+  padding: 0 14px;
+  color: var(--ink);
+  background: #fff;
+  font-weight: 800;
+}
+
 .icon-button {
   width: 44px;
   border: 1px solid var(--line);
   color: var(--ink);
   background: #fff;
+}
+
+.login-page {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    linear-gradient(135deg, rgba(11, 122, 117, 0.1), transparent 38%),
+    #f4f6f8;
+}
+
+.login-card {
+  width: min(100%, 460px);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 34px;
+  background: #fff;
+  box-shadow: var(--shadow);
+}
+
+.login-card h1 {
+  margin: 8px 0 10px;
+  font-size: 34px;
+  line-height: 1.1;
+  letter-spacing: 0;
+}
+
+.login-card p {
+  margin: 0 0 18px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.login-button {
+  width: 100%;
+  margin-top: 18px;
 }
 
 .workspace {
@@ -322,6 +368,18 @@ a:focus-visible {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.empty-note,
+.preview-empty {
+  margin: 8px 0 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.preview-empty {
+  padding: 12px 0;
+  border-bottom: 1px solid #edf1f5;
 }
 
 .github-link {

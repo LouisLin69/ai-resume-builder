@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
-  BriefcaseBusiness,
   Check,
   Download,
   FileText,
   Github,
+  GraduationCap,
   LayoutTemplate,
+  LogIn,
   MonitorSmartphone,
   Plus,
   Printer,
@@ -15,59 +16,52 @@ import {
 } from "lucide-react";
 import "./styles.css";
 
-const STORAGE_KEY = "ai-resume-builder-data-v1";
+const STORAGE_KEY = "ai-resume-builder-blank-workspace-v2";
+const SESSION_KEY = "ai-resume-builder-session";
 
-const starterResume = {
-  name: "Yuda Lin",
+const blankResume = {
+  name: "",
+  role: "",
+  location: "",
+  email: "",
+  phone: "",
+  summary: "",
+  skills: [],
+  education: [],
+  projects: [],
+  experience: [],
+};
+
+const sampleResume = {
+  name: "Alex Chen",
   role: "UI / Front-End Intern",
   location: "Seattle, WA",
-  email: "louis042200@gmail.com",
-  phone: "13758049261",
+  email: "alex@example.com",
+  phone: "1234567890",
   summary:
-    "Informatics student focused on UI design, front-end interaction, and product-minded web experiences. Comfortable using AI agents to speed up prototyping, code iteration, and resume content refinement.",
-  skills: ["HTML", "CSS", "JavaScript", "React", "Figma", "Responsive Design", "AI Agent Workflow"],
+    "Informatics student focused on UI design, front-end development, and user-centered web experiences.",
+  skills: ["HTML", "CSS", "JavaScript", "React", "Figma", "Responsive Design"],
   education: [
     {
-      school: "University of Washington",
+      school: "University Name",
       degree: "B.S. Informatics",
-      period: "2023.09 - 2027.03",
-      detail: "GPA 3.8/4.0; coursework in web development, UI design, data visualization, and information systems.",
+      period: "2023 - 2027",
+      detail: "Relevant coursework in web development, UI design, data visualization, and information systems.",
     },
   ],
   projects: [
     {
-      title: "PlayPal Game Recommendation Website",
-      role: "Front-End Interaction / JavaScript",
-      period: "2026 Spring",
+      title: "Portfolio Website",
+      role: "Front-End Development",
+      period: "2026",
       bullets: [
-        "Designed the browse-filter-view-details flow for a party game discovery website.",
-        "Built JavaScript filter interactions for player count, duration, style, format, and price.",
-        "Structured detail pages to make rules, best-fit scenarios, and requirements easier to scan.",
-      ],
-    },
-    {
-      title: "Fashion Supply Chain Traceability Platform",
-      role: "Requirements Analysis",
-      period: "2026 Autumn",
-      bullets: [
-        "Mapped requirements for real-time tracking, role-based access, supply chain transparency, and customer-facing views.",
-        "Created process and information-flow diagrams to clarify system modules and user paths.",
-        "Presented feature design, user scenarios, and traceability logic in the final project deck.",
+        "Built a responsive website to present projects, experience, and design work.",
+        "Created reusable UI sections and refined visual hierarchy for better readability.",
+        "Deployed the project online for portfolio and resume review.",
       ],
     },
   ],
-  experience: [
-    {
-      company: "Shanghai Jingzheng Technology Co., Ltd.",
-      role: "Finance Intern",
-      period: "2025.07 - 2025.08",
-      bullets: [
-        "Verified vendor invoices and business records with operations and procurement teams.",
-        "Supported management reporting for P&L, cash flow, and KPI materials.",
-        "Improved accuracy and execution through cross-functional communication and data checks.",
-      ],
-    },
-  ],
+  experience: [],
 };
 
 const templates = {
@@ -84,29 +78,47 @@ const templates = {
 function loadInitialData() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : starterResume;
+    return saved ? JSON.parse(saved) : blankResume;
   } catch {
-    return starterResume;
+    return blankResume;
   }
 }
 
 function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(() => sessionStorage.getItem(SESSION_KEY) === "active");
   const [resume, setResume] = useState(loadInitialData);
   const [template, setTemplate] = useState("studio");
   const [saved, setSaved] = useState(true);
 
   useEffect(() => {
+    if (!isLoggedIn) return;
     const id = window.setTimeout(() => {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(resume));
       setSaved(true);
     }, 350);
     return () => window.clearTimeout(id);
-  }, [resume]);
+  }, [resume, isLoggedIn]);
 
   const wordCount = useMemo(() => {
     const raw = JSON.stringify(resume);
     return raw.split(/\s+|。|，|；|、|,/).filter(Boolean).length;
   }, [resume]);
+
+  const login = (event) => {
+    event.preventDefault();
+    sessionStorage.setItem(SESSION_KEY, "active");
+    setIsLoggedIn(true);
+  };
+
+  const logout = () => {
+    sessionStorage.removeItem(SESSION_KEY);
+    setIsLoggedIn(false);
+  };
+
+  const replaceResume = (nextResume) => {
+    setSaved(false);
+    setResume(nextResume);
+  };
 
   const updateField = (field, value) => {
     setSaved(false);
@@ -138,27 +150,13 @@ function App() {
     }));
   };
 
-  const addProject = () => {
+  const addBullet = (section, itemIndex) => {
     setSaved(false);
     setResume((current) => ({
       ...current,
-      projects: [
-        ...current.projects,
-        {
-          title: "New Front-End Project",
-          role: "UI / React Development",
-          period: "2026",
-          bullets: ["Describe the user problem, your implementation, and the measurable outcome."],
-        },
-      ],
-    }));
-  };
-
-  const removeProject = (index) => {
-    setSaved(false);
-    setResume((current) => ({
-      ...current,
-      projects: current.projects.filter((_, itemIndex) => itemIndex !== index),
+      [section]: current[section].map((item, index) =>
+        index === itemIndex ? { ...item, bullets: [...item.bullets, "Describe your work and impact."] } : item,
+      ),
     }));
   };
 
@@ -180,6 +178,36 @@ function App() {
     setResume((current) => ({ ...current, skills: current.skills.filter((_, itemIndex) => itemIndex !== index) }));
   };
 
+  const addItem = (section) => {
+    setSaved(false);
+    const templatesBySection = {
+      projects: {
+        title: "New Project",
+        role: "Your Role",
+        period: "2026",
+        bullets: ["Describe the problem, your solution, and the outcome."],
+      },
+      experience: {
+        company: "Company Name",
+        role: "Position",
+        period: "2026",
+        bullets: ["Describe your responsibility and impact."],
+      },
+      education: {
+        school: "School Name",
+        degree: "Degree / Major",
+        period: "2023 - 2027",
+        detail: "Relevant coursework, GPA, honors, or academic focus.",
+      },
+    };
+    setResume((current) => ({ ...current, [section]: [...current[section], templatesBySection[section]] }));
+  };
+
+  const removeItem = (section, index) => {
+    setSaved(false);
+    setResume((current) => ({ ...current, [section]: current[section].filter((_, itemIndex) => itemIndex !== index) }));
+  };
+
   const exportJson = () => {
     const blob = new Blob([JSON.stringify(resume, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -189,6 +217,10 @@ function App() {
     link.click();
     URL.revokeObjectURL(url);
   };
+
+  if (!isLoggedIn) {
+    return <LoginScreen onSubmit={login} />;
+  }
 
   return (
     <div className="app">
@@ -202,12 +234,21 @@ function App() {
             {saved ? <Check size={16} /> : <Sparkles size={16} />}
             {saved ? "Saved" : "Saving"}
           </span>
+          <button type="button" className="secondary-button" onClick={() => replaceResume(blankResume)}>
+            Blank
+          </button>
+          <button type="button" className="secondary-button" onClick={() => replaceResume(sampleResume)}>
+            Sample
+          </button>
           <button type="button" className="icon-button" onClick={exportJson} aria-label="Export resume data">
             <Download size={18} />
           </button>
           <button type="button" className="primary-button" onClick={() => window.print()}>
             <Printer size={18} />
             Print / PDF
+          </button>
+          <button type="button" className="secondary-button" onClick={logout}>
+            Sign out
           </button>
         </div>
       </header>
@@ -268,34 +309,34 @@ function App() {
                   </button>
                 </div>
               ))}
+              {resume.skills.length === 0 && <p className="empty-note">Add skills to show them in the preview.</p>}
             </div>
           </EditorBlock>
 
-          <EditorBlock title="Projects" icon={<MonitorSmartphone size={18} />} action={<SmallButton onClick={addProject} label="Project" />}>
-            {resume.projects.map((project, index) => (
-              <article className="nested-card" key={`${project.title}-${index}`}>
-                <div className="nested-card-header">
-                  <strong>Project {index + 1}</strong>
-                  <button type="button" aria-label="Remove project" onClick={() => removeProject(index)}>
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-                <Field label="Title" value={project.title} onChange={(value) => updateListItem("projects", index, "title", value)} />
-                <div className="field-grid">
-                  <Field label="Period" value={project.period} onChange={(value) => updateListItem("projects", index, "period", value)} />
-                  <Field label="Role" value={project.role} onChange={(value) => updateListItem("projects", index, "role", value)} />
-                </div>
-                {project.bullets.map((bullet, bulletIndex) => (
-                  <Field
-                    key={`${bulletIndex}-${project.title}`}
-                    label={`Bullet ${bulletIndex + 1}`}
-                    value={bullet}
-                    onChange={(value) => updateBullet("projects", index, bulletIndex, value)}
-                  />
-                ))}
-              </article>
-            ))}
-          </EditorBlock>
+          <ProjectEditor
+            items={resume.projects}
+            onAdd={() => addItem("projects")}
+            onRemove={(index) => removeItem("projects", index)}
+            onChange={(index, field, value) => updateListItem("projects", index, field, value)}
+            onBulletChange={(index, bulletIndex, value) => updateBullet("projects", index, bulletIndex, value)}
+            onAddBullet={(index) => addBullet("projects", index)}
+          />
+
+          <ExperienceEditor
+            items={resume.experience}
+            onAdd={() => addItem("experience")}
+            onRemove={(index) => removeItem("experience", index)}
+            onChange={(index, field, value) => updateListItem("experience", index, field, value)}
+            onBulletChange={(index, bulletIndex, value) => updateBullet("experience", index, bulletIndex, value)}
+            onAddBullet={(index) => addBullet("experience", index)}
+          />
+
+          <EducationEditor
+            items={resume.education}
+            onAdd={() => addItem("education")}
+            onRemove={(index) => removeItem("education", index)}
+            onChange={(index, field, value) => updateListItem("education", index, field, value)}
+          />
         </section>
 
         <section className="preview-panel" aria-label="Resume preview">
@@ -304,15 +345,126 @@ function App() {
               <p className="eyebrow">Live Preview</p>
               <h2>{templates[template].name} template</h2>
             </div>
-            <a className="github-link" href="https://github.com/" target="_blank" rel="noreferrer">
+            <a className="github-link" href="https://github.com/LouisLin69/ai-resume-builder" target="_blank" rel="noreferrer">
               <Github size={17} />
-              GitHub ready
+              GitHub
             </a>
           </div>
           <ResumePreview resume={resume} template={template} />
         </section>
       </main>
     </div>
+  );
+}
+
+function LoginScreen({ onSubmit }) {
+  return (
+    <main className="login-page">
+      <section className="login-card">
+        <p className="eyebrow">AI Resume Builder</p>
+        <h1>Sign in to start a blank resume.</h1>
+        <p>
+          This demo accepts any email and password. Each visitor gets a private blank workspace saved only in
+          their own browser.
+        </p>
+        <form onSubmit={onSubmit}>
+          <Field label="Email" value="" onChange={() => {}} />
+          <Field label="Password" value="" onChange={() => {}} password />
+          <button type="submit" className="primary-button login-button">
+            <LogIn size={18} />
+            Enter builder
+          </button>
+        </form>
+      </section>
+    </main>
+  );
+}
+
+function ProjectEditor({ items, onAdd, onRemove, onChange, onBulletChange, onAddBullet }) {
+  return (
+    <EditorBlock title="Projects" icon={<MonitorSmartphone size={18} />} action={<SmallButton onClick={onAdd} label="Project" />}>
+      {items.map((project, index) => (
+        <article className="nested-card" key={`${project.title}-${index}`}>
+          <div className="nested-card-header">
+            <strong>Project {index + 1}</strong>
+            <button type="button" aria-label="Remove project" onClick={() => onRemove(index)}>
+              <Trash2 size={16} />
+            </button>
+          </div>
+          <Field label="Title" value={project.title} onChange={(value) => onChange(index, "title", value)} />
+          <div className="field-grid">
+            <Field label="Period" value={project.period} onChange={(value) => onChange(index, "period", value)} />
+            <Field label="Role" value={project.role} onChange={(value) => onChange(index, "role", value)} />
+          </div>
+          {project.bullets.map((bullet, bulletIndex) => (
+            <Field
+              key={`${project.title}-${bulletIndex}`}
+              label={`Bullet ${bulletIndex + 1}`}
+              value={bullet}
+              onChange={(value) => onBulletChange(index, bulletIndex, value)}
+            />
+          ))}
+          <SmallButton onClick={() => onAddBullet(index)} label="Bullet" />
+        </article>
+      ))}
+      {items.length === 0 && <p className="empty-note">Add a project to document your work.</p>}
+    </EditorBlock>
+  );
+}
+
+function ExperienceEditor({ items, onAdd, onRemove, onChange, onBulletChange, onAddBullet }) {
+  return (
+    <EditorBlock title="Experience" icon={<FileText size={18} />} action={<SmallButton onClick={onAdd} label="Experience" />}>
+      {items.map((item, index) => (
+        <article className="nested-card" key={`${item.company}-${index}`}>
+          <div className="nested-card-header">
+            <strong>Experience {index + 1}</strong>
+            <button type="button" aria-label="Remove experience" onClick={() => onRemove(index)}>
+              <Trash2 size={16} />
+            </button>
+          </div>
+          <Field label="Company" value={item.company} onChange={(value) => onChange(index, "company", value)} />
+          <div className="field-grid">
+            <Field label="Period" value={item.period} onChange={(value) => onChange(index, "period", value)} />
+            <Field label="Role" value={item.role} onChange={(value) => onChange(index, "role", value)} />
+          </div>
+          {item.bullets.map((bullet, bulletIndex) => (
+            <Field
+              key={`${item.company}-${bulletIndex}`}
+              label={`Bullet ${bulletIndex + 1}`}
+              value={bullet}
+              onChange={(value) => onBulletChange(index, bulletIndex, value)}
+            />
+          ))}
+          <SmallButton onClick={() => onAddBullet(index)} label="Bullet" />
+        </article>
+      ))}
+      {items.length === 0 && <p className="empty-note">Add work, internship, leadership, or volunteer experience.</p>}
+    </EditorBlock>
+  );
+}
+
+function EducationEditor({ items, onAdd, onRemove, onChange }) {
+  return (
+    <EditorBlock title="Education" icon={<GraduationCap size={18} />} action={<SmallButton onClick={onAdd} label="Education" />}>
+      {items.map((item, index) => (
+        <article className="nested-card" key={`${item.school}-${index}`}>
+          <div className="nested-card-header">
+            <strong>Education {index + 1}</strong>
+            <button type="button" aria-label="Remove education" onClick={() => onRemove(index)}>
+              <Trash2 size={16} />
+            </button>
+          </div>
+          <Field label="School" value={item.school} onChange={(value) => onChange(index, "school", value)} />
+          <div className="field-grid">
+            <Field label="Period" value={item.period} onChange={(value) => onChange(index, "period", value)} />
+            <Field label="Degree" value={item.degree} onChange={(value) => onChange(index, "degree", value)} />
+          </div>
+          <Field label="Detail" value={item.detail} onChange={(value) => onChange(index, "detail", value)} />
+        </article>
+      ))}
+      {items.length === 0 && <p className="empty-note">Add your school, degree, and relevant coursework.</p>}
+    </EditorBlock>
   );
 }
 
@@ -338,7 +490,7 @@ function SmallButton({ onClick, label }) {
   );
 }
 
-function Field({ label, value, onChange, multiline = false }) {
+function Field({ label, value, onChange, multiline = false, password = false }) {
   const id = label.toLowerCase().replaceAll(" ", "-");
   return (
     <label className="field" htmlFor={id}>
@@ -346,63 +498,84 @@ function Field({ label, value, onChange, multiline = false }) {
       {multiline ? (
         <textarea id={id} value={value} onChange={(event) => onChange(event.target.value)} rows={4} />
       ) : (
-        <input id={id} value={value} onChange={(event) => onChange(event.target.value)} />
+        <input id={id} type={password ? "password" : "text"} value={value} onChange={(event) => onChange(event.target.value)} />
       )}
     </label>
   );
 }
 
 function ResumePreview({ resume, template }) {
+  const hasSkills = resume.skills.filter(Boolean).length > 0;
+  const hasProjects = resume.projects.length > 0;
+  const hasExperience = resume.experience.length > 0;
+  const hasEducation = resume.education.length > 0;
+
   return (
     <article className={`resume-sheet ${template}`}>
       <header className="resume-header">
         <div>
-          <p className="resume-kicker">{resume.role}</p>
-          <h2>{resume.name}</h2>
-          <p className="resume-summary">{resume.summary}</p>
+          <p className="resume-kicker">{resume.role || "Target role"}</p>
+          <h2>{resume.name || "Your Name"}</h2>
+          <p className="resume-summary">{resume.summary || "Write a concise summary that highlights your focus, strengths, and target role."}</p>
         </div>
         <div className="contact-box">
-          <span>{resume.location}</span>
-          <span>{resume.phone}</span>
-          <span>{resume.email}</span>
+          <span>{resume.location || "Location"}</span>
+          <span>{resume.phone || "Phone"}</span>
+          <span>{resume.email || "Email"}</span>
         </div>
       </header>
 
       <section className="resume-section">
         <h3>Skills</h3>
-        <div className="skill-cloud">
-          {resume.skills.filter(Boolean).map((skill) => (
-            <span key={skill}>{skill}</span>
-          ))}
-        </div>
+        {hasSkills ? (
+          <div className="skill-cloud">
+            {resume.skills.filter(Boolean).map((skill) => (
+              <span key={skill}>{skill}</span>
+            ))}
+          </div>
+        ) : (
+          <p className="preview-empty">Add skills from the editor.</p>
+        )}
       </section>
 
       <section className="resume-section">
         <h3>Projects</h3>
-        {resume.projects.map((project) => (
-          <ResumeItem key={project.title} title={project.title} meta={`${project.period} · ${project.role}`} bullets={project.bullets} />
-        ))}
+        {hasProjects ? (
+          resume.projects.map((project) => (
+            <ResumeItem key={project.title} title={project.title} meta={`${project.period} · ${project.role}`} bullets={project.bullets} />
+          ))
+        ) : (
+          <p className="preview-empty">Add projects to show your work.</p>
+        )}
       </section>
 
       <section className="resume-section two-column-section">
         <div>
           <h3>Experience</h3>
-          {resume.experience.map((item) => (
-            <ResumeItem key={item.company} title={item.company} meta={`${item.period} · ${item.role}`} bullets={item.bullets} />
-          ))}
+          {hasExperience ? (
+            resume.experience.map((item) => (
+              <ResumeItem key={item.company} title={item.company} meta={`${item.period} · ${item.role}`} bullets={item.bullets} />
+            ))
+          ) : (
+            <p className="preview-empty">Add internship, work, or leadership experience.</p>
+          )}
         </div>
         <div>
           <h3>Education</h3>
-          {resume.education.map((item) => (
-            <div className="resume-item compact" key={item.school}>
-              <div className="item-line">
-                <strong>{item.school}</strong>
-                <span>{item.period}</span>
+          {hasEducation ? (
+            resume.education.map((item) => (
+              <div className="resume-item compact" key={item.school}>
+                <div className="item-line">
+                  <strong>{item.school}</strong>
+                  <span>{item.period}</span>
+                </div>
+                <p>{item.degree}</p>
+                <p>{item.detail}</p>
               </div>
-              <p>{item.degree}</p>
-              <p>{item.detail}</p>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p className="preview-empty">Add education details.</p>
+          )}
         </div>
       </section>
     </article>
