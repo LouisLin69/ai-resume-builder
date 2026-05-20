@@ -358,6 +358,9 @@ function App() {
 }
 
 function LoginScreen({ onSubmit }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
   return (
     <main className="login-page">
       <section className="login-card">
@@ -368,8 +371,8 @@ function LoginScreen({ onSubmit }) {
           their own browser.
         </p>
         <form onSubmit={onSubmit}>
-          <Field label="Email" value="" onChange={() => {}} />
-          <Field label="Password" value="" onChange={() => {}} password />
+          <Field label="Email" value={email} onChange={setEmail} />
+          <Field label="Password" value={password} onChange={setPassword} password />
           <button type="submit" className="primary-button login-button">
             <LogIn size={18} />
             Enter builder
