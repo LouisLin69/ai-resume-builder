@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useId, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   Check,
@@ -120,6 +120,12 @@ function App() {
     setResume(nextResume);
   };
 
+  const clearWorkspace = () => {
+    if (!window.confirm("Clear this browser's saved resume and start from a blank workspace?")) return;
+    localStorage.removeItem(STORAGE_KEY);
+    replaceResume(blankResume);
+  };
+
   const updateField = (field, value) => {
     setSaved(false);
     setResume((current) => ({ ...current, [field]: value }));
@@ -234,7 +240,7 @@ function App() {
             {saved ? <Check size={16} /> : <Sparkles size={16} />}
             {saved ? "Saved" : "Saving"}
           </span>
-          <button type="button" className="secondary-button" onClick={() => replaceResume(blankResume)}>
+          <button type="button" className="secondary-button" onClick={clearWorkspace}>
             Blank
           </button>
           <button type="button" className="secondary-button" onClick={() => replaceResume(sampleResume)}>
@@ -298,7 +304,7 @@ function App() {
           <EditorBlock title="Skills" icon={<Sparkles size={18} />} action={<SmallButton onClick={addSkill} label="Skill" />}>
             <div className="skill-editor">
               {resume.skills.map((skill, index) => (
-                <div className="inline-row" key={`${skill}-${index}`}>
+                <div className="inline-row" key={`skill-${index}`}>
                   <input
                     aria-label={`Skill ${index + 1}`}
                     value={skill}
@@ -387,7 +393,7 @@ function ProjectEditor({ items, onAdd, onRemove, onChange, onBulletChange, onAdd
   return (
     <EditorBlock title="Projects" icon={<MonitorSmartphone size={18} />} action={<SmallButton onClick={onAdd} label="Project" />}>
       {items.map((project, index) => (
-        <article className="nested-card" key={`${project.title}-${index}`}>
+        <article className="nested-card" key={`project-${index}`}>
           <div className="nested-card-header">
             <strong>Project {index + 1}</strong>
             <button type="button" aria-label="Remove project" onClick={() => onRemove(index)}>
@@ -401,7 +407,7 @@ function ProjectEditor({ items, onAdd, onRemove, onChange, onBulletChange, onAdd
           </div>
           {project.bullets.map((bullet, bulletIndex) => (
             <Field
-              key={`${project.title}-${bulletIndex}`}
+              key={`project-${index}-bullet-${bulletIndex}`}
               label={`Bullet ${bulletIndex + 1}`}
               value={bullet}
               onChange={(value) => onBulletChange(index, bulletIndex, value)}
@@ -419,7 +425,7 @@ function ExperienceEditor({ items, onAdd, onRemove, onChange, onBulletChange, on
   return (
     <EditorBlock title="Experience" icon={<FileText size={18} />} action={<SmallButton onClick={onAdd} label="Experience" />}>
       {items.map((item, index) => (
-        <article className="nested-card" key={`${item.company}-${index}`}>
+        <article className="nested-card" key={`experience-${index}`}>
           <div className="nested-card-header">
             <strong>Experience {index + 1}</strong>
             <button type="button" aria-label="Remove experience" onClick={() => onRemove(index)}>
@@ -433,7 +439,7 @@ function ExperienceEditor({ items, onAdd, onRemove, onChange, onBulletChange, on
           </div>
           {item.bullets.map((bullet, bulletIndex) => (
             <Field
-              key={`${item.company}-${bulletIndex}`}
+              key={`experience-${index}-bullet-${bulletIndex}`}
               label={`Bullet ${bulletIndex + 1}`}
               value={bullet}
               onChange={(value) => onBulletChange(index, bulletIndex, value)}
@@ -451,7 +457,7 @@ function EducationEditor({ items, onAdd, onRemove, onChange }) {
   return (
     <EditorBlock title="Education" icon={<GraduationCap size={18} />} action={<SmallButton onClick={onAdd} label="Education" />}>
       {items.map((item, index) => (
-        <article className="nested-card" key={`${item.school}-${index}`}>
+        <article className="nested-card" key={`education-${index}`}>
           <div className="nested-card-header">
             <strong>Education {index + 1}</strong>
             <button type="button" aria-label="Remove education" onClick={() => onRemove(index)}>
@@ -494,7 +500,8 @@ function SmallButton({ onClick, label }) {
 }
 
 function Field({ label, value, onChange, multiline = false, password = false }) {
-  const id = label.toLowerCase().replaceAll(" ", "-");
+  const reactId = useId();
+  const id = `${reactId}-${label.toLowerCase().replaceAll(" ", "-")}`;
   return (
     <label className="field" htmlFor={id}>
       <span>{label}</span>
@@ -532,8 +539,8 @@ function ResumePreview({ resume, template }) {
         <h3>Skills</h3>
         {hasSkills ? (
           <div className="skill-cloud">
-            {resume.skills.filter(Boolean).map((skill) => (
-              <span key={skill}>{skill}</span>
+            {resume.skills.filter(Boolean).map((skill, index) => (
+              <span key={`preview-skill-${index}`}>{skill}</span>
             ))}
           </div>
         ) : (
@@ -544,8 +551,8 @@ function ResumePreview({ resume, template }) {
       <section className="resume-section">
         <h3>Projects</h3>
         {hasProjects ? (
-          resume.projects.map((project) => (
-            <ResumeItem key={project.title} title={project.title} meta={`${project.period} · ${project.role}`} bullets={project.bullets} />
+          resume.projects.map((project, index) => (
+            <ResumeItem key={`preview-project-${index}`} title={project.title} meta={`${project.period} · ${project.role}`} bullets={project.bullets} />
           ))
         ) : (
           <p className="preview-empty">Add projects to show your work.</p>
@@ -556,8 +563,8 @@ function ResumePreview({ resume, template }) {
         <div>
           <h3>Experience</h3>
           {hasExperience ? (
-            resume.experience.map((item) => (
-              <ResumeItem key={item.company} title={item.company} meta={`${item.period} · ${item.role}`} bullets={item.bullets} />
+            resume.experience.map((item, index) => (
+              <ResumeItem key={`preview-experience-${index}`} title={item.company} meta={`${item.period} · ${item.role}`} bullets={item.bullets} />
             ))
           ) : (
             <p className="preview-empty">Add internship, work, or leadership experience.</p>
@@ -566,8 +573,8 @@ function ResumePreview({ resume, template }) {
         <div>
           <h3>Education</h3>
           {hasEducation ? (
-            resume.education.map((item) => (
-              <div className="resume-item compact" key={item.school}>
+            resume.education.map((item, index) => (
+              <div className="resume-item compact" key={`preview-education-${index}`}>
                 <div className="item-line">
                   <strong>{item.school}</strong>
                   <span>{item.period}</span>
@@ -593,8 +600,8 @@ function ResumeItem({ title, meta, bullets }) {
         <span>{meta}</span>
       </div>
       <ul>
-        {bullets.filter(Boolean).map((bullet) => (
-          <li key={bullet}>{bullet}</li>
+        {bullets.filter(Boolean).map((bullet, index) => (
+          <li key={`bullet-${index}`}>{bullet}</li>
         ))}
       </ul>
     </div>
