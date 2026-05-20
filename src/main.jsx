@@ -364,12 +364,13 @@ function App() {
             </div>
           </EditorBlock>
 
-          <EditorBlock title="Skills" icon={<Sparkles size={18} />} action={<SmallButton onClick={addSkill} label="Skill" />}>
+          <EditorBlock title="Skills" icon={<Sparkles size={18} />} action={<SmallButton onClick={addSkill} label="Add skill" />}>
             <div className="skill-editor">
               {resume.skills.map((skill, index) => (
                 <div className="inline-row" key={skill.id}>
                   <input
                     aria-label={`Skill ${index + 1}`}
+                    placeholder="Skill"
                     value={skill.value}
                     onChange={(event) => updateSkill(index, event.target.value)}
                   />
@@ -454,7 +455,7 @@ function LoginScreen({ onSubmit }) {
 
 function ProjectEditor({ items, onAdd, onRemove, onChange, onBulletChange, onAddBullet }) {
   return (
-    <EditorBlock title="Projects" icon={<MonitorSmartphone size={18} />} action={<SmallButton onClick={onAdd} label="Project" />}>
+    <EditorBlock title="Projects" icon={<MonitorSmartphone size={18} />} action={<SmallButton onClick={onAdd} label="Add project" />}>
       {items.map((project, index) => (
         <article className="nested-card" key={project.id}>
           <div className="nested-card-header">
@@ -486,7 +487,7 @@ function ProjectEditor({ items, onAdd, onRemove, onChange, onBulletChange, onAdd
 
 function ExperienceEditor({ items, onAdd, onRemove, onChange, onBulletChange, onAddBullet }) {
   return (
-    <EditorBlock title="Experience" icon={<FileText size={18} />} action={<SmallButton onClick={onAdd} label="Experience" />}>
+    <EditorBlock title="Experience" icon={<FileText size={18} />} action={<SmallButton onClick={onAdd} label="Add experience" />}>
       {items.map((item, index) => (
         <article className="nested-card" key={item.id}>
           <div className="nested-card-header">
@@ -518,7 +519,7 @@ function ExperienceEditor({ items, onAdd, onRemove, onChange, onBulletChange, on
 
 function EducationEditor({ items, onAdd, onRemove, onChange }) {
   return (
-    <EditorBlock title="Education" icon={<GraduationCap size={18} />} action={<SmallButton onClick={onAdd} label="Education" />}>
+    <EditorBlock title="Education" icon={<GraduationCap size={18} />} action={<SmallButton onClick={onAdd} label="Add education" />}>
       {items.map((item, index) => (
         <article className="nested-card" key={item.id}>
           <div className="nested-card-header">
@@ -569,9 +570,15 @@ function Field({ label, value, onChange, multiline = false, password = false }) 
     <label className="field" htmlFor={id}>
       <span>{label}</span>
       {multiline ? (
-        <textarea id={id} value={value} onChange={(event) => onChange(event.target.value)} rows={4} />
+        <textarea id={id} placeholder={label} value={value} onChange={(event) => onChange(event.target.value)} rows={4} />
       ) : (
-        <input id={id} type={password ? "password" : "text"} value={value} onChange={(event) => onChange(event.target.value)} />
+        <input
+          id={id}
+          type={password ? "password" : "text"}
+          placeholder={label}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        />
       )}
     </label>
   );
